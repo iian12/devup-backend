@@ -19,11 +19,11 @@ import java.util.List;
 @Slf4j
 public class JwtTokenFilter extends OncePerRequestFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtTokenFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    public JwtTokenFilter(JwtService jwtService, CustomUserDetailsService customUserDetailsService) {
+        this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
     }
 
@@ -46,10 +46,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            String userId = jwtTokenProvider.getUserId(token);
+        if (token != null && jwtService.validate(token)) {
+            Long userId = jwtService.getUserId(token);
 
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(userId);
+            UserDetails userDetails = customUserDetailsService.loadUserByUserId(userId);
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

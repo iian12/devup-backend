@@ -1,8 +1,8 @@
 package com.example.devup_backend.global.security.config;
 
 import com.example.devup_backend.global.auth.service.CustomUserDetailsService;
+import com.example.devup_backend.global.security.jwt.JwtService;
 import com.example.devup_backend.global.security.jwt.JwtTokenFilter;
-import com.example.devup_backend.global.security.jwt.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -21,11 +21,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtService jwtService;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtTokenProvider jwtTokenProvider) {
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtService jwtService) {
         this.customUserDetailsService = customUserDetailsService;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtService = jwtService;
     }
 
     @Bean
@@ -57,6 +57,6 @@ public class SecurityConfig {
 
     @Bean
     public JwtTokenFilter jwtTokenFilter() {
-        return new JwtTokenFilter(jwtTokenProvider, customUserDetailsService);
+        return new JwtTokenFilter(jwtService, customUserDetailsService);
     }
 }

@@ -7,6 +7,8 @@ import com.example.devup_backend.global.auth.dto.IdToken;
 import com.example.devup_backend.global.auth.dto.LinkInfo;
 import com.example.devup_backend.global.auth.dto.LinkToken;
 import com.example.devup_backend.global.auth.dto.TokenResult;
+import com.example.devup_backend.global.security.jwt.JwtRedisService;
+import com.example.devup_backend.global.security.jwt.JwtService;
 import com.example.devup_backend.global.security.jwt.JwtTokenProvider;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -32,11 +34,15 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final RedisTemplate<Object, Object> redisTemplate;
+    private final JwtService jwtService;
+    private final JwtRedisService jwtRedisService;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider, UserRepository userRepository, RedisTemplate<Object, Object> redisTemplate) {
+    public AuthService(JwtTokenProvider jwtTokenProvider, UserRepository userRepository, RedisTemplate<Object, Object> redisTemplate, JwtService jwtService, JwtRedisService jwtRedisService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.redisTemplate = redisTemplate;
+        this.jwtService = jwtService;
+        this.jwtRedisService = jwtRedisService;
     }
 
     @Value("${client-id}")
@@ -71,9 +77,12 @@ public class AuthService {
 
                 userRepository.save(user);
 
+                String accessToken = jwtTokenProvider.createAccessToken(user.getId());
+                String refreshToken = createAndStoreRefreshToken(user.getId());
+
                 return new TokenResult(
-                        jwtTokenProvider.createAccessToken(user.getId()),
-                        jwtTokenProvider.createRefreshToken(user.getId()),
+                        accessToken,
+                        refreshToken,
                         null,
                         false);
             }
@@ -94,14 +103,24 @@ public class AuthService {
                         existingUser.isProfileCompleted());
             }
 
+            String accessToken = jwtTokenProvider.createAccessToken(existingUser.getId());
+            String refreshToken = createAndStoreRefreshToken(existingUser.getId());
+
             return new TokenResult(
-                    jwtTokenProvider.createAccessToken(existingUser.getId()),
-                    jwtTokenProvider.createRefreshToken(existingUser.getId()),
+                    accessToken,
+                    refreshToken,
                     null,
                     existingUser.isProfileCompleted());
         } catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException("Google ID token verification failed", e);
         }
+    }
+
+    private String createAndStoreRefreshToken(Long userId) {
+        String refreshToken = jwtTokenProvider.createRefreshToken(userId);
+        jwtRedisService.storeRefreshToken(userId, refreshToken, jwtService.getTokenId(refreshToken), jwtService.getRemainingTTL(refreshToken));
+
+        return refreshToken;
     }
 
     public void linkGoogleAccount(LinkToken linkToken) {

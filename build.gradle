@@ -39,6 +39,8 @@ dependencies {
     implementation 'com.github.f4b6a3:uuid-creator:6.1.0'
     implementation 'org.apache.tika:tika-core:3.0.0'
     implementation 'com.github.slugify:slugify:3.0.7'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.2.2'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'

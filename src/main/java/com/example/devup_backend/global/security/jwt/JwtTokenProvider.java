@@ -3,45 +3,45 @@ package com.example.devup_backend.global.security.jwt;
 import com.example.devup_backend.domain.user.model.Users;
 import com.example.devup_backend.domain.user.repository.UserRepository;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
 
     private final UserRepository userRepository;
+    private final JwtKeyProvider jwtKeyProvider;
+    private Key key;
 
-    public JwtTokenProvider(UserRepository userRepository) {
+    public JwtTokenProvider(UserRepository userRepository, JwtKeyProvider jwtKeyProvider) {
         this.userRepository = userRepository;
+        this.jwtKeyProvider = jwtKeyProvider;
     }
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+    @PostConstruct
+    public void init() {
+        this.key = jwtKeyProvider.getKey();
+    }
+
     @Value("${jwt.access-token-validity-in-ms}")
     private int accessTokenValidityInMs;
     @Value("${jwt.refresh-token-validity-in-ms}")
     private int refreshTokenValidityInMs;
-    private Key key;
-
-    @PostConstruct
-    protected void init() {
-        byte[] keyBytes = Base64.getDecoder().decode(secretKey);
-        key = Keys.hmacShaKeyFor(keyBytes);
-    }
 
     public String createAccessToken(Long userId) {
         try {
             if (userId == null) {
                 throw new IllegalArgumentException("userId cannot be null");
             }
+
             Users user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
             Date now = new Date();
             Date validity = new Date(now.getTime() + accessTokenValidityInMs);
 
@@ -62,50 +62,16 @@ public class JwtTokenProvider {
             Date now = new Date();
             Date validity = new Date(now.getTime() + refreshTokenValidityInMs);
 
-            return Jwts.builder().setSubject(String.valueOf(userId)).setIssuedAt(now)
-                    .setExpiration(validity).signWith(key, SignatureAlgorithm.HS256).compact();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+            // 멀티 디바이스 지원
+            String tokenId = UUID.randomUUID().toString();
 
-    public long getRefreshTokenRemainingTime(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-
-            Date expiration = claims.getExpiration();
-            long remainingTime = expiration.getTime() - System.currentTimeMillis();
-            return remainingTime / 1000;
-        } catch (Exception e) {
-            return 0L;
-        }
-    }
-
-    public boolean validateToken(String token) {
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7);
-        }
-
-        try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-
-            return true;
-        } catch (MalformedJwtException | IllegalArgumentException | ExpiredJwtException e) {
-            return false;
-        }
-    }
-
-    public String getUserId(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-
-            return claims.getSubject();
-        } catch (JwtException e) {
-            throw new IllegalArgumentException("Invalid token");
+            return Jwts.builder()
+                    .setSubject(userId.toString())
+                    .setId(tokenId)
+                    .setIssuedAt(now)
+                    .setExpiration(validity)
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
