@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/*
+ * 사용자 관련 비즈니스 로직 처리
+ */
 @Service
 @Transactional
 public class UserService {

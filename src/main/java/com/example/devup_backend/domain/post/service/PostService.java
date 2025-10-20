@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * 게시글 관련 비즈니스 로직 처리
+ */
 @Service
 @Transactional
 public class PostService {

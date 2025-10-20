@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 사용자와 관련된 요청을 처리하는 컨트롤러
+ */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
