@@ -1,9 +1,9 @@
 package com.example.devup_backend.global.security.jwt;
 
+import com.example.devup_backend.domain.user.model.UserId;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -21,7 +21,7 @@ public class JwtRedisService {
         }
     }
 
-    public void storeRefreshToken(Long userId, String refreshToken, String tokenId, long ttlSeconds) {
+    public void storeRefreshToken(UserId userId, String refreshToken, String tokenId, long ttlSeconds) {
         if (ttlSeconds> 0) {
             redisTemplate.opsForValue().set(
                     "refresh:" + userId + ":" + tokenId,

@@ -1,10 +1,7 @@
 package com.example.devup_backend.domain.aritlcle.model;
 
-import io.hypersistence.utils.hibernate.id.Tsid;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+import com.example.devup_backend.domain.user.model.UserId;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,11 +15,12 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Article {
 
-    @Id
-    @Tsid
-    private Long id;
+    @EmbeddedId
+    @AttributeOverride(name = "value", column = @Column(name = "article_id"))
+    private ArticleId articleId;
 
-    private Long userId;
+    @AttributeOverride(name = "value", column = @Column(name = "user_id"))
+    private UserId userId;
 
     private String title;
     @Lob
@@ -32,7 +30,8 @@ public class Article {
     private LocalDateTime createdAt;
 
     @Builder
-    public Article(Long userId, String title, String content, List<Long> hashtagIds) {
+    public Article(UserId userId, String title, String content, List<Long> hashtagIds) {
+        this.articleId = ArticleId.newId();
         this.userId = userId;
         this.title = title;
         this.content = content;

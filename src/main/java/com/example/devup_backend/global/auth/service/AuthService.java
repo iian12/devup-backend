@@ -1,6 +1,7 @@
 package com.example.devup_backend.global.auth.service;
 
 import com.example.devup_backend.domain.user.model.Provider;
+import com.example.devup_backend.domain.user.model.UserId;
 import com.example.devup_backend.domain.user.model.Users;
 import com.example.devup_backend.domain.user.repository.UserRepository;
 import com.example.devup_backend.global.auth.dto.IdToken;
@@ -33,11 +34,11 @@ public class AuthService {
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
-    private final RedisTemplate<Object, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final JwtService jwtService;
     private final JwtRedisService jwtRedisService;
 
-    public AuthService(JwtTokenProvider jwtTokenProvider, UserRepository userRepository, RedisTemplate<Object, Object> redisTemplate, JwtService jwtService, JwtRedisService jwtRedisService) {
+    public AuthService(JwtTokenProvider jwtTokenProvider, UserRepository userRepository, RedisTemplate<String, Object> redisTemplate, JwtService jwtService, JwtRedisService jwtRedisService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
         this.redisTemplate = redisTemplate;
@@ -77,8 +78,8 @@ public class AuthService {
 
                 userRepository.save(user);
 
-                String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-                String refreshToken = createAndStoreRefreshToken(user.getId());
+                String accessToken = jwtTokenProvider.createAccessToken(user.getUserId());
+                String refreshToken = createAndStoreRefreshToken(user.getUserId());
 
                 return new TokenResult(
                         accessToken,
@@ -103,8 +104,8 @@ public class AuthService {
                         existingUser.isProfileCompleted());
             }
 
-            String accessToken = jwtTokenProvider.createAccessToken(existingUser.getId());
-            String refreshToken = createAndStoreRefreshToken(existingUser.getId());
+            String accessToken = jwtTokenProvider.createAccessToken(existingUser.getUserId());
+            String refreshToken = createAndStoreRefreshToken(existingUser.getUserId());
 
             return new TokenResult(
                     accessToken,
@@ -116,7 +117,7 @@ public class AuthService {
         }
     }
 
-    private String createAndStoreRefreshToken(Long userId) {
+    private String createAndStoreRefreshToken(UserId userId) {
         String refreshToken = jwtTokenProvider.createRefreshToken(userId);
         jwtRedisService.storeRefreshToken(userId, refreshToken, jwtService.getTokenId(refreshToken), jwtService.getRemainingTTL(refreshToken));
 

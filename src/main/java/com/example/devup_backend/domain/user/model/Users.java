@@ -1,6 +1,5 @@
 package com.example.devup_backend.domain.user.model;
 
-import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,9 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Users {
 
-    @Id
-    @Tsid
-    private Long id;
+    @EmbeddedId
+    @AttributeOverride(name = "value", column = @Column(name = "user_id"))
+    private UserId userId;
 
     private String nickname;
     @Column(unique = true)
@@ -38,6 +37,7 @@ public class Users {
 
     @Builder
     public Users(String nickname, String email, String password, String bio, String profileImageUrl, Provider provider, String subjectId) {
+        this.userId = UserId.newId();
         this.nickname = nickname;
         this.email = email;
         this.password = password;

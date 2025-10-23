@@ -25,14 +25,11 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostTagRepository postTagRepository;
     private final PostMapper postMapper;
-    private final TsidBase62Util tsidBase62Util;
 
-    public PostService(PostRepository postRepository, PostTagRepository postTagRepository, PostMapper postMapper,
-                       TsidBase62Util tsidBase62Util) {
+    public PostService(PostRepository postRepository, PostTagRepository postTagRepository, PostMapper postMapper) {
         this.postRepository = postRepository;
         this.postTagRepository = postTagRepository;
         this.postMapper = postMapper;
-        this.tsidBase62Util = tsidBase62Util;
     }
 
     public String createPost(CustomUserDetail userDetail, PostCreateReqDto reqDto) {
@@ -44,20 +41,20 @@ public class PostService {
 
         String slug = SlugUtil.slugify(reqDto.title());
 
-        Post postEntity = postMapper.toEntity(reqDto, userDetail.getUser().getId(), postTagIds, slug);
+        Post postEntity = postMapper.toEntity(reqDto, userDetail.getUser().getUserId(), postTagIds, slug);
         Post savedPost = postRepository.save(postEntity);
 
         postRepository.save(savedPost);
-        return tsidBase62Util.encode(savedPost.getId());
+        return TsidBase62Util.encode(savedPost.getPostId().value());
     }
 
     private Long findOrCreatePostTag(String name) {
         return postTagRepository.findByName(name)
-                .map(PostTags::getId)
+                .map(tag -> tag.getPostTagId().value())
                 .orElseGet(() -> {
                     PostTags newTag = PostTags.builder().name(name).build();
                     postTagRepository.save(newTag);
-                    return newTag.getId();
+                    return newTag.getPostTagId().value();
                 });
     }
 }

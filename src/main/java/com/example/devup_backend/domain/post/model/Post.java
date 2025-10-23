@@ -1,5 +1,6 @@
 package com.example.devup_backend.domain.post.model;
 
+import com.example.devup_backend.domain.user.model.UserId;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -15,12 +16,15 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post {
 
-    @Id
-    @Tsid
-    private Long id;
+    @EmbeddedId
+    @AttributeOverride(name = "value", column = @Column(name = "post_id"))
+    private PostId postId;
 
-    private Long userId;
+    @AttributeOverride(name = "value", column = @Column(name = "user_id"))
+    private UserId userId;
+
     private String title;
+
     @Lob
     private String content;
     private String slug;
@@ -32,7 +36,8 @@ public class Post {
     private LocalDateTime createdAt;
 
     @Builder
-    public Post(Long userId, String title, String content, String slug, BoardType boardType, List<Long> hashtagIds) {
+    public Post(UserId userId, String title, String content, String slug, BoardType boardType, List<Long> hashtagIds) {
+        this.postId = PostId.newId();
         this.userId = userId;
         this.title = title;
         this.content = content;

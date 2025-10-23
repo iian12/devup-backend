@@ -2,13 +2,14 @@ package com.example.devup_backend.domain.user.service;
 
 import com.example.devup_backend.domain.user.dto.UserProfileRequest;
 import com.example.devup_backend.domain.user.dto.UserStatusResponse;
-import com.example.devup_backend.domain.user.model.UserField;
-import com.example.devup_backend.domain.user.model.UserStatus;
-import com.example.devup_backend.domain.user.model.Users;
+import com.example.devup_backend.domain.user.model.*;
+import com.example.devup_backend.domain.user.model.field.FieldId;
+import com.example.devup_backend.domain.user.model.field.UserField;
 import com.example.devup_backend.domain.user.repository.FieldRepository;
 import com.example.devup_backend.domain.user.repository.UserFieldRepository;
 import com.example.devup_backend.domain.user.repository.UserRepository;
 import com.example.devup_backend.global.auth.service.CustomUserDetail;
+import com.example.devup_backend.global.utils.TsidBase62Util;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +32,6 @@ public class UserService {
         this.userFieldRepository = userFieldRepository;
     }
 
-    public void joinNewUser() {
-        Users user = Users.builder()
-                .build();
-    }
-
     public UserStatusResponse getMyStatus(CustomUserDetail userDetail) {
         Users user = userDetail.getUser();
 
@@ -45,31 +41,42 @@ public class UserService {
         return new UserStatusResponse(status, profileCompleted);
     }
 
+    /*
+        * 사용자 닉네임 및 관심 분야 저장
+     */
     public void saveUserNicknameAndField(CustomUserDetail userDetail, UserProfileRequest request) {
         Users user = userDetail.getUser();
 
         String nickname = request.getNickname();
-        List<Long> fieldIds = request.getFieldIds();
 
-        for (int i = 0; i < fieldIds.size() && i < 2; i++) {
-            if (fieldIds.get(i) == null) {
+        // Base62 인코딩된 String으로 받음
+        List<String> fieldIdStrings = request.getFieldIds();
+
+        for (int i = 0; i < fieldIdStrings.size() && i < 2; i++) {
+            String fieldIdStr = fieldIdStrings.get(i);
+
+            if (fieldIdStr == null || fieldIdStr.isBlank()) {
                 UserField userField = UserField.builder()
-                        .userId(user.getId())
+                        .userId(user.getUserId())
                         .isSkipped(true)
                         .priority(i + 1)
                         .fieldId(null)
                         .build();
                 userFieldRepository.save(userField);
             } else {
-                Long fieldId = fieldRepository.findById(fieldIds.get(i))
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid ID")).getId();
+                // String → Long → FieldId
+                long decodedId = TsidBase62Util.decode(fieldIdStr);
+                FieldId fieldId = fieldRepository.findById(FieldId.of(decodedId))
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid ID"))
+                        .getFieldId();
 
                 UserField userField = UserField.builder()
-                        .userId(user.getId())
+                        .userId(user.getUserId())
                         .fieldId(fieldId)
                         .priority(i + 1)
                         .isSkipped(false)
                         .build();
+
                 userFieldRepository.save(userField);
             }
         }
@@ -78,4 +85,5 @@ public class UserService {
         user.updateStatus(UserStatus.ACTIVE);
         userRepository.save(user);
     }
+
 }

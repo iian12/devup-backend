@@ -11,10 +11,10 @@ import java.util.List;
 public class UserProfileRequest {
 
     private String nickname;
-    private List<Long> fieldIds;
+    private List<String> fieldIds;
 
     @Builder
-    public UserProfileRequest(String nickname, List<Long> fieldIds) {
+    public UserProfileRequest(String nickname, List<String> fieldIds) {
         this.nickname = nickname;
         this.fieldIds = fieldIds;
     }

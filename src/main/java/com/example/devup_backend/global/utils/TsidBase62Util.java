@@ -6,14 +6,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class TsidBase62Util {
 
-    private final String alphabet;
-    private final int BASE = 62;
+    private static String alphabet;
+    private static final int BASE = 62;
 
     public TsidBase62Util(@Value("${base62.secret}") String alphabet) {
-        this.alphabet = alphabet;
+        TsidBase62Util.alphabet = alphabet;
     }
 
-    public String encode(long tsid) {
+    public static String encode(long tsid) {
         StringBuilder sb = new StringBuilder();
 
         while (tsid > 0) {
@@ -24,7 +24,7 @@ public class TsidBase62Util {
         return sb.reverse().toString();
     }
 
-    public long decode(String base62) {
+    public static long decode(String base62) {
         if (base62 == null || base62.isEmpty()) return 0;
         long result = 0;
         for (char c : base62.toCharArray()) {

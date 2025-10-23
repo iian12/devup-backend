@@ -1,5 +1,6 @@
 package com.example.devup_backend.global.security.jwt;
 
+import com.example.devup_backend.domain.user.model.UserId;
 import com.example.devup_backend.domain.user.model.Users;
 import com.example.devup_backend.domain.user.repository.UserRepository;
 import io.jsonwebtoken.*;
@@ -33,7 +34,7 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-token-validity-in-ms}")
     private int refreshTokenValidityInMs;
 
-    public String createAccessToken(Long userId) {
+    public String createAccessToken(UserId userId) {
         try {
             if (userId == null) {
                 throw new IllegalArgumentException("userId cannot be null");
@@ -57,7 +58,7 @@ public class JwtTokenProvider {
         }
     }
 
-    public String createRefreshToken(Long userId) {
+    public String createRefreshToken(UserId userId) {
         try {
             Date now = new Date();
             Date validity = new Date(now.getTime() + refreshTokenValidityInMs);

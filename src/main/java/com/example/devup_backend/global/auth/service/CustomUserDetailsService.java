@@ -1,5 +1,6 @@
 package com.example.devup_backend.global.auth.service;
 
+import com.example.devup_backend.domain.user.model.UserId;
 import com.example.devup_backend.domain.user.model.Users;
 import com.example.devup_backend.domain.user.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public UserDetails loadUserByUserId(long userId) throws UsernameNotFoundException {
-        Users user = userRepository.findById(userId)
+        Users user = userRepository.findById(new UserId(userId))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
 
         return new CustomUserDetail(user);

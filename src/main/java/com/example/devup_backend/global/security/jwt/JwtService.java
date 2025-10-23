@@ -1,5 +1,6 @@
 package com.example.devup_backend.global.security.jwt;
 
+import com.example.devup_backend.domain.user.model.UserId;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
@@ -43,7 +44,7 @@ public class JwtService {
 
     public String reissueAccessToken(String refreshToken) {
         String userId = getClaims(refreshToken).getSubject();
-        return jwtTokenProvider.createAccessToken(Long.valueOf(userId));
+        return jwtTokenProvider.createAccessToken(UserId.of(Long.parseLong(userId)));
     }
 
     public Long getUserId(String token) {
